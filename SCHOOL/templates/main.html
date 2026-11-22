@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% block menu %}
+<a href="/register" class="w3-bar-item w3-button w3-right">REGISTER</a>
+{% endblock %}
 {% block content %}
 <div class="w3-padding">
     <a href="/register" class="w3-button w3-blue">+ADD</a>
@@ -18,9 +21,9 @@
     {% for s in students %}
     <tr>
         <td>{{ s['id'] }}</td>
-        <td><img src="{{ url_for('static', filename='img/' ~ s['idno'] ~ '.jpg') }}"
-                 width="40" height="40" style="object-fit:cover;border-radius:50%"
-                 onerror="this.style.display='none'"></td>
+        <td>{% if s['image'] %}<img src="/{{ s['image'] }}" width="40" height="40"
+                 style="object-fit:cover;border-radius:50%"
+                 onerror="this.style.display='none'">{% endif %}</td>
         <td>{{ s['idno'] }}</td>
         <td>{{ s['lastname']|upper }}</td>
         <td>{{ s['firstname']|upper }}</td>
