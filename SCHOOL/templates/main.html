@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="w3-padding">
+    <a href="/register" class="w3-button w3-blue">+ADD</a>
+</div>
+<div class="w3-responsive w3-padding">
+<table class="w3-table-all w3-card-4 w3-animate-top">
+    <tr>
+        <th>ID</th>
+        <th>PICTURE</th>
+        <th>IDNO</th>
+        <th>LASTNAME</th>
+        <th>FIRSTNAME</th>
+        <th>COURSE</th>
+        <th>LEVEL</th>
+        <th>CONTROL</th>
+    </tr>
+    {% for s in students %}
+    <tr>
+        <td>{{ s['id'] }}</td>
+        <td><img src="{{ url_for('static', filename='img/' ~ s['idno'] ~ '.jpg') }}"
+                 width="40" height="40" style="object-fit:cover;border-radius:50%"
+                 onerror="this.style.display='none'"></td>
+        <td>{{ s['idno'] }}</td>
+        <td>{{ s['lastname']|upper }}</td>
+        <td>{{ s['firstname']|upper }}</td>
+        <td>{{ s['course']|upper }}</td>
+        <td>{{ s['level'] }}</td>
+        <td>
+            <a href="/delete/{{ s['idno'] }}" class="w3-button w3-small w3-red"
+               onclick="return confirm('Delete this student?')">&#128465;</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% endblock %}

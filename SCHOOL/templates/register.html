@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block menu %}
+<a href="/main" class="w3-bar-item w3-button w3-right">Back</a>
+{% endblock %}
+{% block content %}
+<div class="w3-row w3-padding">
+
+    <!-- LEFT: camera + form -->
+    <div class="w3-half w3-container w3-padding-8 w3-card-4">
+        <center><div id="camera"></div></center>
+
+        <p><label><b>IDNO</b></label>
+        <input type="number" id="idno" name="idno" class="w3-input w3-border"></p>
+
+        <p><label><b>LASTNAME</b></label>
+        <input type="text" id="lastname" name="lastname" class="w3-input w3-border"></p>
+
+        <p><label><b>FIRSTNAME</b></label>
+        <input type="text" id="firstname" name="firstname" class="w3-input w3-border"></p>
+
+        <p><label><b>COURSE</b></label>
+        <select id="course" name="course" class="w3-select w3-border">
+            <option value="bsit">INFORMATION TECH.</option>
+            <option value="bscs">COMPUTER SCIENCE</option>
+        </select></p>
+
+        <p><label><b>LEVEL</b></label>
+        <select id="level" name="level" class="w3-select w3-border">
+            <option value="1">FIRST YEAR</option>
+            <option value="2">SECOND YEAR</option>
+            <option value="3">THIRD YEAR</option>
+            <option value="4">FOURTH YEAR</option>
+        </select></p>
+
+        <p class="w3-center">
+            <button class="w3-button w3-blue" onclick="take_picture()">SNAP</button>
+        </p>
+    </div>
+
+    <!-- RIGHT: preview + summary + save -->
+    <div class="w3-half w3-container w3-padding-8">
+        <center><div id="picture"></div></center>
+        <table class="w3-table-all">
+            <tr><td><b>IDNO</b></td><td><div id="myidno"></div></td></tr>
+            <tr><td><b>LASTNAME</b></td><td><div id="mylastname"></div></td></tr>
+            <tr><td><b>FIRSTNAME</b></td><td><div id="myfirstname"></div></td></tr>
+            <tr><td><b>COURSE</b></td><td><div id="mycourse"></div></td></tr>
+            <tr><td><b>LEVEL</b></td><td><div id="mylevel"></div></td></tr>
+        </table>
+        <p class="w3-center">
+            <button class="w3-button w3-green" onclick="save_info()">SAVE</button>
+        </p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/webcam.min.js') }}"></script>
+<script>
+    Webcam.set({
+        width: 320,
+        height: 240,
+        dest_width: 320,
+        dest_height: 240,
+        image_type: 'jpeg',
+        image_quality: 90,
+        fps: 30
+    });
+    Webcam.attach('#camera');
+
+    // Returns true only when every field has a value.
+    // If one is empty: show a prompt, focus that field, and return false.
+    function fields_ok() {
+        var fields = [
+            {id: 'idno',      label: 'IDNO'},
+            {id: 'lastname',  label: 'LASTNAME'},
+            {id: 'firstname', label: 'FIRSTNAME'},
+            {id: 'course',    label: 'COURSE'},
+            {id: 'level',     label: 'LEVEL'}
+        ];
+        for (var i = 0; i < fields.length; i++) {
+            var el = document.getElementById(fields[i].id);
+            if (el.value.trim() === '') {
+                alert('Please fill in the ' + fields[i].label + ' field before taking a picture.');
+                el.focus();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function take_picture() {
+        if (!fields_ok()) { return; }          // a field is empty -> no snap
+        Webcam.snap(function (data_uri) {
+            document.getElementById('picture').innerHTML = "<img id='imgprev' src='" + data_uri + "'>";
+            document.getElementById('myidno').innerHTML = document.getElementById('idno').value;
+            document.getElementById('mylastname').innerHTML = document.getElementById('lastname').value;
+            document.getElementById('myfirstname').innerHTML = document.getElementById('firstname').value;
+            document.getElementById('mycourse').innerHTML = document.getElementById('course').value;
+            document.getElementById('mylevel').innerHTML = document.getElementById('level').value;
+        });
+    }
+
+    function save_info() {
+        var img = document.getElementById('imgprev');
+        if (!img) { alert('Please take a picture first (press SNAP).'); return; }
+        if (!fields_ok()) { return; }
+
+        var q = "idno="       + encodeURIComponent(document.getElementById('idno').value) +
+                "&lastname="  + encodeURIComponent(document.getElementById('lastname').value) +
+                "&firstname=" + encodeURIComponent(document.getElementById('firstname').value) +
+                "&course="    + encodeURIComponent(document.getElementById('course').value) +
+                "&level="     + encodeURIComponent(document.getElementById('level').value);
+
+        Webcam.upload(img.src, "/save?" + q, function (code, text) {
+            if (code === 200) {
+                alert("New Student Added");
+                window.location.href = "/main";
+            } else {
+                alert(text);
+            }
+        });
+    }
+</script>
+{% endblock %}
