@@ -60,7 +60,7 @@
         height: 240,
         dest_width: 320,
         dest_height: 240,
-        image_type: 'jpeg',
+        image_type: 'png',
         image_quality: 90,
         fps: 30
     });
@@ -87,6 +87,7 @@
         return true;
     }
 
+    // SNAP: checks the fields first, then shows the picture and the details
     function take_picture() {
         if (!fields_ok()) { return; }          // a field is empty -> no snap
         Webcam.snap(function (data_uri) {
@@ -99,14 +100,15 @@
         });
     }
 
+    // SAVE: saves the picture in static/img and the student (with the image path) in school.db
     function save_info() {
         var img = document.getElementById('imgprev');
         if (!img) { alert('Please take a picture first (press SNAP).'); return; }
         if (!fields_ok()) { return; }
 
-        var q = "idno="       + encodeURIComponent(document.getElementById('idno').value) +
-                "&lastname="  + encodeURIComponent(document.getElementById('lastname').value) +
-                "&firstname=" + encodeURIComponent(document.getElementById('firstname').value) +
+        var q = "idno="       + encodeURIComponent(document.getElementById('idno').value.trim()) +
+                "&lastname="  + encodeURIComponent(document.getElementById('lastname').value.trim()) +
+                "&firstname=" + encodeURIComponent(document.getElementById('firstname').value.trim()) +
                 "&course="    + encodeURIComponent(document.getElementById('course').value) +
                 "&level="     + encodeURIComponent(document.getElementById('level').value);
 
