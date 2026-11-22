@@ -1,14 +1,26 @@
-import os, sys
+import os, sys, sqlite3
 os.chdir(os.path.dirname(os.path.abspath(__file__)))   # so "db/school.db" always resolves
 sys.path.insert(0, 'db/')
 
 from flask import Flask, render_template, request, redirect, url_for
-from werkzeug.utils import secure_filename
 from dbhelper import *
 
 upload_folder = "static/img"
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = upload_folder
+
+
+def ensure_image_column() -> None:
+    """Add the `image` column to students if the database doesn't have it yet."""
+    conn = sqlite3.connect("db/school.db")
+    cols = [row[1] for row in conn.execute("PRAGMA table_info(students)")]
+    if "image" not in cols:
+        conn.execute("ALTER TABLE students ADD COLUMN image varchar(100)")
+        conn.commit()
+    conn.close()
+
+
+ensure_image_column()
 
 
 @app.route("/")
@@ -27,7 +39,9 @@ def register() -> None:
     return render_template('register.html')
 
 
-@app.route("/save", methods=['POST', 'GET'])
+# Called when SAVE is pressed: saves the picture in static/img
+# and records its path in the `image` column of school.db.
+@app.route("/save", methods=['POST'])
 def save() -> None:
     file: any = request.files.get('webcam')
     idno: str = (request.args.get('idno') or '').strip()
@@ -36,26 +50,29 @@ def save() -> None:
     course: str = (request.args.get('course') or '').strip()
     level: str = (request.args.get('level') or '').strip()
 
-    # server-side check (the browser also checks before SNAP)
     if not (file and idno and lastname and firstname and course and level):
         return "Please fill in all fields and take a picture.", 400
+    if not idno.isalnum():
+        return "IDNO may only contain letters and numbers.", 400
+    if len(getrecord('students', idno=idno)) > 0:
+        return "IDNO already exists.", 409
 
-    filename: str = upload_folder + "/" + secure_filename(idno) + ".jpg"
-    ok: bool = addrecord('students', idno=idno, lastname=lastname,
-                         firstname=firstname, course=course, level=level)
+    image: str = upload_folder + "/" + idno + ".png"     # e.g. static/img/9001.png
+    ok: bool = addrecord('students', idno=idno, lastname=lastname, firstname=firstname,
+                         course=course, level=level, image=image)
     if not ok:
-        return "IDNO already exists or could not be saved.", 409
+        return "Could not save the student.", 500
 
-    file.save(filename)
+    file.save(image)
     return "OK", 200
 
 
 @app.route("/delete/<idno>")
 def delete(idno: str) -> None:
+    rec: list = getrecord('students', idno=idno)
     deleterecord('students', idno=idno)
-    path: str = upload_folder + "/" + secure_filename(idno) + ".jpg"
-    if os.path.exists(path):
-        os.remove(path)
+    if rec and rec[0]['image'] and os.path.exists(rec[0]['image']):
+        os.remove(rec[0]['image'])
     return redirect(url_for('main'))
 
 
