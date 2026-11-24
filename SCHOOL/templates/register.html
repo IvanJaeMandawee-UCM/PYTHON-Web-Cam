@@ -5,7 +5,6 @@
 {% block content %}
 <div class="w3-row w3-padding">
 
-    <!-- LEFT: camera + form -->
     <div class="w3-half w3-container w3-padding-8 w3-card-4">
         <center><div id="camera"></div></center>
 
@@ -22,6 +21,7 @@
         <select id="course" name="course" class="w3-select w3-border">
             <option value="bsit">INFORMATION TECH.</option>
             <option value="bscs">COMPUTER SCIENCE</option>
+            <option value="dait">APPLIED IT</option>
         </select></p>
 
         <p><label><b>LEVEL</b></label>
@@ -37,7 +37,6 @@
         </p>
     </div>
 
-    <!-- RIGHT: preview + summary + save -->
     <div class="w3-half w3-container w3-padding-8">
         <center><div id="picture"></div></center>
         <table class="w3-table-all">
@@ -47,14 +46,18 @@
             <tr><td><b>COURSE</b></td><td><div id="mycourse"></div></td></tr>
             <tr><td><b>LEVEL</b></td><td><div id="mylevel"></div></td></tr>
         </table>
+        <br>
+        <center><div id="qrcode"></div></center>
         <p class="w3-center">
-            <button class="w3-button w3-green" onclick="save_info()">SAVE</button>
+            <button id="savebtn" class="w3-button w3-green" onclick="save_info()">SAVE</button>
         </p>
     </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/webcam.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
 <script>
+    var BASE_URL = {{ base_url|tojson }};
     Webcam.set({
         width: 320,
         height: 240,
@@ -66,8 +69,6 @@
     });
     Webcam.attach('#camera');
 
-    // Returns true only when every field has a value.
-    // If one is empty: show a prompt, focus that field, and return false.
     function fields_ok() {
         var fields = [
             {id: 'idno',      label: 'IDNO'},
@@ -87,9 +88,9 @@
         return true;
     }
 
-    // SNAP: checks the fields first, then shows the picture and the details
     function take_picture() {
-        if (!fields_ok()) { return; }          // a field is empty -> no snap
+        if (!fields_ok()) { return; }
+        document.getElementById('savebtn').disabled = false;
         Webcam.snap(function (data_uri) {
             document.getElementById('picture').innerHTML = "<img id='imgprev' src='" + data_uri + "'>";
             document.getElementById('myidno').innerHTML = document.getElementById('idno').value;
@@ -97,10 +98,15 @@
             document.getElementById('myfirstname').innerHTML = document.getElementById('firstname').value;
             document.getElementById('mycourse').innerHTML = document.getElementById('course').value;
             document.getElementById('mylevel').innerHTML = document.getElementById('level').value;
+
+            var idno = document.getElementById('idno').value.trim();
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById('qrcode'),
+                       { text: BASE_URL + 'student/' + encodeURIComponent(idno),
+                         width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
         });
     }
 
-    // SAVE: saves the picture in static/img and the student (with the image path) in school.db
     function save_info() {
         var img = document.getElementById('imgprev');
         if (!img) { alert('Please take a picture first (press SNAP).'); return; }
@@ -114,8 +120,8 @@
 
         Webcam.upload(img.src, "/save?" + q, function (code, text) {
             if (code === 200) {
-                alert("New Student Added");
-                window.location.href = "/main";
+                document.getElementById('savebtn').disabled = true;
+                alert("New Student Saved");
             } else {
                 alert(text);
             }

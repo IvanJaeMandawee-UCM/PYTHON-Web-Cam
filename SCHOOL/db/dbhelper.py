@@ -61,7 +61,6 @@ def deleterecord(table:str,**kwargs)->bool:
 def addrecord(table:str,**kwargs)->bool:
     keys:list = list(kwargs.keys())
     vals:list = list(kwargs.values())
-    #insert into `student`(`idno`,`name`,`course`) values(?,?,?)
     q:list = ['?']*len(keys)
     qmarks:str = ",".join(q)
     flds:str = "`,`".join(keys)
@@ -71,7 +70,6 @@ def addrecord(table:str,**kwargs)->bool:
 def updaterecord(table:str,**kwargs)->bool:
     keys:list = list(kwargs.keys())
     vals:list = list(kwargs.values())
-    #update `students` SET `lastname`=?,`firstname`=? WHERE `idno`='1000'
     flds:list = []
     newvals:list = []
     for i in range(1,len(keys)):

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="w3-container" style="max-width:480px;margin:auto">
+{% if s %}
+    <div class="w3-card-4 w3-margin-top">
+        <div class="w3-container w3-teal"><h3>STUDENT</h3></div>
+        {% if s['image'] %}
+        <p class="w3-center">
+            <img src="/{{ s['image'] }}" style="max-width:100%;border-radius:8px" onerror="this.style.display='none'">
+        </p>
+        {% endif %}
+        <table class="w3-table-all">
+            <tr><td><b>IDNO</b></td><td>{{ s['idno'] }}</td></tr>
+            <tr><td><b>LASTNAME</b></td><td>{{ s['lastname']|upper }}</td></tr>
+            <tr><td><b>FIRSTNAME</b></td><td>{{ s['firstname']|upper }}</td></tr>
+            <tr><td><b>COURSE</b></td><td>{{ course }}</td></tr>
+            <tr><td><b>LEVEL</b></td><td>{{ level }}</td></tr>
+        </table>
+    </div>
+{% else %}
+    <div class="w3-panel w3-pale-red w3-border w3-margin-top">
+        <h3>Student not found</h3>
+        <p>This QR code does not match a saved student.</p>
+    </div>
+{% endif %}
+</div>
+{% endblock %}

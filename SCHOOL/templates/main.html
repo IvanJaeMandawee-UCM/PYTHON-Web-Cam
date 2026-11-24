@@ -3,6 +3,12 @@
 <a href="/register" class="w3-bar-item w3-button w3-right">REGISTER</a>
 {% endblock %}
 {% block content %}
+<style>
+    .icon-btn { display:inline-flex; align-items:center; justify-content:center;
+                width:28px; height:28px; padding:0 !important; box-sizing:border-box; margin:0 2px; line-height:1; font-size:0; vertical-align:middle;
+                background:#f1f1f1; color:#000; border:1px solid #999; cursor:pointer; }
+    .icon-btn:hover { background:#ddd; }
+</style>
 <div class="w3-padding">
     <a href="/register" class="w3-button w3-blue">+ADD</a>
 </div>
@@ -30,11 +36,92 @@
         <td>{{ s['course']|upper }}</td>
         <td>{{ s['level'] }}</td>
         <td>
-            <a href="/delete/{{ s['idno'] }}" class="w3-button w3-small w3-red"
-               onclick="return confirm('Delete this student?')">&#128465;</a>
+            <a href="/delete/{{ s['idno'] }}" class="w3-button w3-small w3-border icon-btn"
+               title="Remove student"
+               onclick='return confirm({{ ("Remove " ~ s["firstname"] ~ " " ~ s["lastname"] ~ " (IDNO " ~ s["idno"] ~ ") from the student list? This cannot be undone.")|tojson }})'><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M5 5L19 19M19 5L5 19"/></svg></a>
+            <button class="w3-button w3-small w3-border icon-btn" title="View QR / details"
+               onclick='viewstudent({{ s["idno"]|tojson }}, {{ s["lastname"]|tojson }}, {{ s["firstname"]|tojson }}, {{ s["course"]|tojson }}, {{ s["level"]|tojson }})'><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
         </td>
     </tr>
     {% endfor %}
 </table>
 </div>
+
+<div class="w3-modal" id="studentmodal" style="display:none">
+    <div class="w3-modal-content w3-animate-top">
+        <div class="w3-container w3-teal">
+            <h3>STUDENT</h3>
+            <span class="w3-display-topright w3-btn"
+                  onclick="modalcontrol('studentmodal','none')">&times;</span>
+        </div>
+        <div class="w3-container">
+            <p class="w3-center">
+                <img class="w3-image" src="{{ url_for('static', filename='img/onkinking.png') }}"
+                     style="max-height:150px" onerror="this.style.display='none'">
+            </p>
+            <center><div id="studentqr"></div></center>
+            <p class="w3-center w3-small w3-text-grey">Scan this QR code to see the student's picture and details.<br>
+               Link: <a id="studentlink" href="#" target="_blank"></a>
+               {% if allow_phones %}<br>Phone must be on the same Wi-Fi as this computer (mobile data off).{% endif %}</p>
+            <form action="/update" method="post">
+                <p>
+                    <label>IDNO</label>
+                    <input type="text" class="w3-input w3-border" id="idno" name="idno" readonly>
+                </p>
+                <p>
+                    <label>LASTNAME</label>
+                    <input type="text" class="w3-input w3-border" id="lastname" name="lastname" required>
+                </p>
+                <p>
+                    <label>FIRSTNAME</label>
+                    <input type="text" class="w3-input w3-border" id="firstname" name="firstname" required>
+                </p>
+                <p>
+                    <label>COURSE</label>
+                    <select class="w3-select w3-border" id="course" name="course">
+                        <option value="bsit">INFORMATION TECH.</option>
+                        <option value="bscs">COMPUTER SCIENCE</option>
+                        <option value="dait">APPLIED IT</option>
+                    </select>
+                </p>
+                <p>
+                    <label>LEVEL</label>
+                    <select class="w3-select w3-border" id="level" name="level">
+                        <option value="1">FIRST YEAR</option>
+                        <option value="2">SECOND YEAR</option>
+                        <option value="3">THIRD YEAR</option>
+                        <option value="4">FOURTH YEAR</option>
+                    </select>
+                </p>
+                <p class="w3-right">
+                    <input type="submit" value="SAVE" class="w3-button w3-blue">
+                    <input type="reset" value="CANCEL" class="w3-button w3-red"
+                           onclick="modalcontrol('studentmodal','none')">
+                </p>
+                <div class="w3-clear"></div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/qrcode.min.js') }}"></script>
+<script>
+    var BASE_URL = {{ base_url|tojson }};
+    function modalcontrol(modal, control) {
+        document.getElementById(modal).style.display = control;
+    }
+    function viewstudent(idno, lastname, firstname, course, level) {
+        document.getElementById('idno').value = idno;
+        document.getElementById('lastname').value = lastname;
+        document.getElementById('firstname').value = firstname;
+        document.getElementById('course').value = String(course).toLowerCase();
+        document.getElementById('level').value = level;
+        var qr = document.getElementById('studentqr');
+        qr.innerHTML = '';
+        var link = BASE_URL + 'student/' + encodeURIComponent(idno);
+        new QRCode(qr, { text: link, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+        var a = document.getElementById('studentlink');
+        a.href = link; a.textContent = link;
+        modalcontrol('studentmodal', 'block');
+    }
+</script>
 {% endblock %}
